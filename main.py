@@ -30,6 +30,22 @@ class Graph:
                     self.add_edge(i, j, weight)
 
 
+    # Ant Colony Algorithm
+    def initialize_pheromones(self, initial_pheromone=1):
+        """
+        Inicjalizuje wartości feromonów na każdej krawędzi.
+        """
+        for i in range(self.num_vertices):
+            for j in range(self.num_vertices):
+                if self.adjacency_matrix[i][j] != 0:
+                    self.pheromone_matrix[i][j] = initial_pheromone
+
+    def display_pheromones(self):
+        print("Macierz feromonów:")
+        for row in self.pheromone_matrix:
+            print(row)
+
+
 
 # Przykład użycia
 g = Graph(5)
