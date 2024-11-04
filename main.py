@@ -124,23 +124,51 @@ class Graph:
         # Wyświetlamy czas wykonania
         elapsed_time = time.time() - self.start_time
         print(f"\nCzas wykonania programu: {elapsed_time:.2f} sekund")
+
+    def run_aco(self, num_ants=10, num_iterations=5, alpha=1, beta=1, decay=0.5, pheromone_increase=1):
+        """
+        Pełny cykl algorytmu mrówkowego.
+        
+        Parametry:
+        - num_ants: liczba mrówek w każdej iteracji
+        - num_iterations: liczba iteracji algorytmu
+        - alpha: wpływ feromonów na wybór ścieżki
+        - beta: wpływ wagi krawędzi na wybór ścieżki
+        - decay: współczynnik odparowywania feromonów
+        - pheromone_increase: ilość feromonów dodanych do używanych ścieżek
+        """
+        for iteration in range(num_iterations):
+            print(f"\n--- Iteracja {iteration + 1} ---")
+            all_paths = []
+            for ant in range(num_ants):
+                current_vertex = random.randint(0, self.num_vertices - 1)  # Startujemy z losowego wierzchołka
+                path = [current_vertex]
+                
+                # Symulacja ruchu mrówki
+                for _ in range(self.num_vertices - 1):
+                    next_vertex = self.ant_move(current_vertex, alpha, beta)
+                    if next_vertex is None:
+                        break
+                    path.append(next_vertex)
+                    current_vertex = next_vertex
+                
+                all_paths.append(path)
+                print(f"Ścieżka mrówki {ant + 1}: {' -> '.join(map(str, path))}")
+            
+            # Aktualizacja feromonów po ruchach wszystkich mrówek
+            self.update_pheromones(all_paths, decay, pheromone_increase)
+            
+            # Wyświetlamy informacje po każdej iteracji
+            self.display_info(paths=all_paths)        
     
     
 
 
 # Przykład użycia
-g = Graph(20)
-g.generate_random_graph(edge_probability=0.5, max_weight=100)
+g = Graph(10)
+g.generate_random_graph(edge_probability=0.5, max_weight=50)
 g.initialize_pheromones()
 
-# Przykładowe ścieżki przejścia mrówek (symulacja)
-paths = [
-    [0, 1, 4, 2],
-    [1, 3, 0, 4],
-    [2, 3, 1]
-]
-
-# Aktualizacja feromonów i wyświetlenie informacji
-g.update_pheromones(paths, decay=0.3, pheromone_increase=2)
-g.display_info(paths=paths)
+# Uruchomienie pełnego cyklu algorytmu mrówkowego
+g.run_aco(num_ants=5, num_iterations=3, alpha=1, beta=1, decay=0.3, pheromone_increase=2)
 
