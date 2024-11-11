@@ -94,7 +94,7 @@ class Graph:
         - graph1, graph2: dwa grafy do wizualizacji
         - mapping: lista dopasowań wierzchołków między grafami
         """
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(12, 6))
         
         # Graf 1
         G1 = nx.Graph()
@@ -103,13 +103,15 @@ class Graph:
                 if graph1.adjacency_matrix[i][j] > 0:
                     G1.add_edge(i, j, weight=graph1.adjacency_matrix[i][j])
 
-        # Ustalona pozycja dla węzłów w Grafie 1
+        # Ustalona pozycja dla Grafu 1 po lewej stronie
         pos1 = nx.spring_layout(G1, seed=42)
-        nx.draw(G1, pos1, with_labels=True, ax=ax1, node_color='skyblue')
-        edge_labels1 = nx.get_edge_attributes(G1, 'weight')
-        nx.draw_networkx_edge_labels(G1, pos1, edge_labels=edge_labels1, ax=ax1)
-        ax1.set_title("Graf 1")
+        for node in pos1:
+            pos1[node] = (pos1[node][0] - 1.5, pos1[node][1])  # Shift Graf 1 to the left
         
+        nx.draw(G1, pos1, with_labels=True, ax=ax, node_color='skyblue')
+        edge_labels1 = nx.get_edge_attributes(G1, 'weight')
+        nx.draw_networkx_edge_labels(G1, pos1, edge_labels=edge_labels1, ax=ax)
+
         # Graf 2
         G2 = nx.Graph()
         for i in range(graph2.num_vertices):
@@ -117,22 +119,23 @@ class Graph:
                 if graph2.adjacency_matrix[i][j] > 0:
                     G2.add_edge(i, j, weight=graph2.adjacency_matrix[i][j])
 
-        # Ustalona pozycja dla węzłów w Grafie 2 (dodajemy offset, aby oddzielić grafy wizualnie)
-        pos2 = {node: (pos[0] + 2.5, pos[1]) for node, pos in pos1.items()}
-        nx.draw(G2, pos2, with_labels=True, ax=ax2, node_color='lightgreen')
+        # Ustalona pozycja dla Grafu 2 po prawej stronie
+        pos2 = nx.spring_layout(G2, seed=42)
+        for node in pos2:
+            pos2[node] = (pos2[node][0] + 1.5, pos2[node][1])  # Shift Graf 2 to the right
+        
+        nx.draw(G2, pos2, with_labels=True, ax=ax, node_color='lightgreen')
         edge_labels2 = nx.get_edge_attributes(G2, 'weight')
-        nx.draw_networkx_edge_labels(G2, pos2, edge_labels=edge_labels2, ax=ax2)
-        ax2.set_title("Graf 2")
+        nx.draw_networkx_edge_labels(G2, pos2, edge_labels=edge_labels2, ax=ax)
 
         # Rysujemy dopasowania wierzchołków między Grafem 1 i Grafem 2
         for u, v in mapping:
             if u in pos1 and v in pos2:  # Sprawdź, czy wierzchołki istnieją w pos1 i pos2
                 pos_u, pos_v = pos1[u], pos2[v]
-                plt.plot([pos_u[0], pos_v[0]], [pos_u[1], pos_v[1]], 'k--')
+                ax.plot([pos_u[0], pos_v[0]], [pos_u[1], pos_v[1]], 'k--')
 
-        plt.suptitle("Dopasowanie między Grafem 1 a Grafem 2")
+        plt.title("Dopasowanie między Grafem 1 a Grafem 2")
         plt.show()
-
 
 
     def run_aco_for_isomorphism(self, graph1, graph2, num_ants=10, num_iterations=5, alpha=1, beta=1, decay=0.5, pheromone_increase=1):
