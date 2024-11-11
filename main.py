@@ -103,7 +103,8 @@ class Graph:
                 if graph1.adjacency_matrix[i][j] > 0:
                     G1.add_edge(i, j, weight=graph1.adjacency_matrix[i][j])
 
-        pos1 = nx.spring_layout(G1)
+        # Ustalona pozycja dla węzłów w Grafie 1
+        pos1 = nx.spring_layout(G1, seed=42)
         nx.draw(G1, pos1, with_labels=True, ax=ax1, node_color='skyblue')
         edge_labels1 = nx.get_edge_attributes(G1, 'weight')
         nx.draw_networkx_edge_labels(G1, pos1, edge_labels=edge_labels1, ax=ax1)
@@ -116,7 +117,8 @@ class Graph:
                 if graph2.adjacency_matrix[i][j] > 0:
                     G2.add_edge(i, j, weight=graph2.adjacency_matrix[i][j])
 
-        pos2 = nx.spring_layout(G2)
+        # Ustalona pozycja dla węzłów w Grafie 2 (dodajemy offset, aby oddzielić grafy wizualnie)
+        pos2 = {node: (pos[0] + 2.5, pos[1]) for node, pos in pos1.items()}
         nx.draw(G2, pos2, with_labels=True, ax=ax2, node_color='lightgreen')
         edge_labels2 = nx.get_edge_attributes(G2, 'weight')
         nx.draw_networkx_edge_labels(G2, pos2, edge_labels=edge_labels2, ax=ax2)
@@ -126,10 +128,11 @@ class Graph:
         for u, v in mapping:
             if u in pos1 and v in pos2:  # Sprawdź, czy wierzchołki istnieją w pos1 i pos2
                 pos_u, pos_v = pos1[u], pos2[v]
-                plt.plot([pos_u[0], pos_v[0] + 6], [pos_u[1], pos_v[1]], 'k--')
+                plt.plot([pos_u[0], pos_v[0]], [pos_u[1], pos_v[1]], 'k--')
 
         plt.suptitle("Dopasowanie między Grafem 1 a Grafem 2")
         plt.show()
+
 
 
     def run_aco_for_isomorphism(self, graph1, graph2, num_ants=10, num_iterations=5, alpha=1, beta=1, decay=0.5, pheromone_increase=1):
