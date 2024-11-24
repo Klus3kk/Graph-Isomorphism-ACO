@@ -4,6 +4,7 @@ import json
 import matplotlib.pyplot as plt
 import networkx as nx
 from itertools import permutations
+from tqdm import tqdm
 
 class Graph:
     def __init__(self, num_vertices):
@@ -18,16 +19,23 @@ class Graph:
         self.adjacency_matrix[u][v] = weight
         self.adjacency_matrix[v][u] = weight
 
-    def generate_random_graph(self, edge_probability=0.3, max_weight=10):
+    def generate_random_graph(self, edge_probability=0.3, max_weight=10, graph_type="random"):
         """
         Generuje losowy graf.
         Parametry:
         - edge_probability: prawdopodobieństwo utworzenia krawędzi między dwoma wierzchołkami
         - max_weight: maksymalna wartość wagi krawędzi
         """
+        print("Generowanie grafu typu:", graph_type)
         for i in range(self.num_vertices):
             for j in range(i + 1, self.num_vertices):
-                if random.random() <= edge_probability:
+                if graph_type == "random" and random.random() <= edge_probability:
+                    weight = random.randint(1, max_weight)
+                    self.add_edge(i, j, weight)
+                elif graph_type == "complete":
+                    weight = random.randint(1, max_weight)
+                    self.add_edge(i, j, weight)
+                elif graph_type == "sparse" and random.random() <= edge_probability / 2:
                     weight = random.randint(1, max_weight)
                     self.add_edge(i, j, weight)
 
@@ -67,6 +75,7 @@ class Graph:
         """
         Implementacja zachłannego algorytmu do znajdowania izomorfizmu między grafami.
         """
+        print("Wykonywanie algorytmu zachłannego...")
         mapping = []
         used_vertices_graph2 = set()
         for u in range(self.num_vertices):
@@ -86,19 +95,49 @@ class Graph:
                 used_vertices_graph2.add(best_match)
         return mapping
 
+    def randomized_greedy_isomorphism(self, graph2, randomness_factor=0.1):
+        mapping = []
+        used_vertices_graph2 = set()
+
+        for u in range(self.num_vertices):
+            candidates = []
+            for v in range(graph2.num_vertices):
+                if v not in used_vertices_graph2:
+                    score = sum(1 for neighbor_u in range(self.num_vertices)
+                                if self.adjacency_matrix[u][neighbor_u] > 0 and
+                                graph2.adjacency_matrix[v][neighbor_u] > 0)
+                    candidates.append((v, score))
+
+            candidates.sort(key=lambda x: -x[1])
+            if not candidates:
+                continue
+
+            if random.random() < randomness_factor and len(candidates) > 1:
+                chosen = random.choice(candidates[1:])
+            else:
+                chosen = candidates[0]
+
+            mapping.append((u, chosen[0]))
+            used_vertices_graph2.add(chosen[0])
+
+        return mapping
+
     def brute_force_isomorphism(self, graph2):
-        """
-        Przegląd pełny wszystkich możliwych dopasowań (brute-force).
-        """
+        print("Wykonywanie pełnego przeglądu (brute-force)...")
         best_mapping = None
         best_score = 0
-        for perm in permutations(range(graph2.num_vertices)):
-            mapping = [(u, v) for u, v in enumerate(perm)]
-            score = self.evaluate_mapping(self, graph2, mapping)
-            if score > best_score:
-                best_score = score
-                best_mapping = mapping
+        total_permutations = len(list(permutations(range(graph2.num_vertices))))  # Liczba permutacji
+        with tqdm(total=total_permutations, desc="Brute-force progress", leave=True) as pbar:
+            for perm in permutations(range(graph2.num_vertices)):
+                mapping = [(u, v) for u, v in enumerate(perm)]
+                score = self.evaluate_mapping(self, graph2, mapping)
+                if score > best_score:
+                    best_score = score
+                    best_mapping = mapping
+                pbar.update(1)  # Aktualizuj pasek postępu
+        print("Algorytm brute-force zakończony!")
         return best_mapping, best_score
+
 
     def evaluate_mapping(self, graph1, graph2, mapping):
         """
@@ -127,11 +166,9 @@ class Graph:
                 self.pheromone_matrix[v][u] += pheromone_increase
 
     def run_aco_for_isomorphism(self, graph1, graph2, num_ants=10, num_iterations=5, alpha=1, beta=1, decay=0.5, pheromone_increase=1):
-        """
-        Pełny cykl algorytmu mrówkowego dla dopasowania izomorficznego.
-        """
+        print("Rozpoczynanie algorytmu mrówkowego (ACO)...")
         best_mapping, best_score = None, float('-inf')
-        for iteration in range(num_iterations):
+        for iteration in tqdm(range(num_iterations), desc="ACO iterations progress", leave=True):
             all_mappings = []
             for ant in range(num_ants):
                 mapping = []
@@ -148,8 +185,9 @@ class Graph:
                 if score > best_score:
                     best_mapping, best_score = mapping, score
             self.update_pheromones([m[0] for m in all_mappings], decay, pheromone_increase)
-        self.visualize_mapping(graph1, graph2, best_mapping)
+        print("Algorytm mrówkowy (ACO) zakończony!")
         return best_mapping, best_score
+
 
     def visualize_mapping(self, graph1, graph2, mapping):
         """
@@ -188,12 +226,10 @@ class Graph:
         plt.show()
 
     def evaluate_solution_quality(self, graph2, num_ants=5, num_iterations=3, alpha=1, beta=1, decay=0.3, pheromone_increase=2):
-        """
-        Funkcja testująca, która uruchamia trzy algorytmy (zachłanny, brute-force i mrówkowy) na dwóch grafach.
-        Porównuje wyniki (oceny) i czas wykonania każdego algorytmu.
-        """
+        print("Rozpoczynanie oceny jakości rozwiązań...")
         results = {}
 
+        print("Uruchamianie algorytmu zachłannego...")
         start_time = time.time()
         mapping_greedy = self.greedy_isomorphism(graph2)
         score_greedy = self.evaluate_mapping(self, graph2, mapping_greedy)
@@ -203,7 +239,12 @@ class Graph:
             'Score': score_greedy,
             'Time': time_greedy
         }
+        # Zapis grafu i mappingu do JSON
+        self.save_mapping_to_json(graph2, mapping_greedy, "greedy_mapping.json")
+        # Wizualizacja wyniku zachłannego
+        self.visualize_mapping(self, graph2, mapping_greedy)
 
+        print("Uruchamianie algorytmu brute-force...")
         start_time = time.time()
         mapping_brute, score_brute = self.brute_force_isomorphism(graph2)
         time_brute = time.time() - start_time
@@ -212,7 +253,13 @@ class Graph:
             'Score': score_brute,
             'Time': time_brute
         }
+        # Zapis grafu i mappingu do JSON
+        self.save_mapping_to_json(graph2, mapping_brute, "brute_force_mapping.json")
+        # Wizualizacja wyniku brute-force
+        if mapping_brute:
+            self.visualize_mapping(self, graph2, mapping_brute)
 
+        print("Uruchamianie algorytmu mrówkowego...")
         start_time = time.time()
         mapping_aco, score_aco = self.run_aco_for_isomorphism(self, graph2, num_ants=num_ants, num_iterations=num_iterations, alpha=alpha, beta=beta, decay=decay, pheromone_increase=pheromone_increase)
         time_aco = time.time() - start_time
@@ -221,11 +268,37 @@ class Graph:
             'Score': score_aco,
             'Time': time_aco
         }
+        # Zapis grafu i mappingu do JSON
+        self.save_mapping_to_json(graph2, mapping_aco, "aco_mapping.json")
 
+        # Zapis wyników do pliku JSON
         with open("results.json", "w") as f:
             json.dump(results, f, indent=4)
             print("Wyniki zapisane do pliku results.json")
         return results
+
+    
+    def save_mapping_to_json(self, graph2, mapping, filename):
+        """
+        Zapisuje grafy i mapping do pliku JSON.
+        """
+        data = {
+            "Graph1": {
+                "num_vertices": self.num_vertices,
+                "adjacency_matrix": self.adjacency_matrix
+            },
+            "Graph2": {
+                "num_vertices": graph2.num_vertices,
+                "adjacency_matrix": graph2.adjacency_matrix
+            },
+            "Mapping": mapping
+        }
+        with open(filename, "w") as f:
+            json.dump(data, f, indent=4)
+        print(f"Mapping zapisany do pliku {filename}")
+
+
+
 
 # Przykład użycia i porównanie algorytmów
 graph1 = Graph(10)
