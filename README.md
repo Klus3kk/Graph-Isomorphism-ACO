@@ -114,11 +114,3 @@ BruteForce: czas = 0.012048s, jakość = 1.000000
 Uruchamianie algorytmu mrówkowego (ACO)...
 ACO: czas = 0.004231s, jakość = 0.950000
 ```
-
-## Customization
-
-- **Adjust ACO Parameters**:
-  Modify the `num_ants`, `num_iterations`, `alpha`, `beta`, and `pheromone_decay` in the code to fine-tune the performance of the ACO algorithm.
-  
-- **Change Benchmark Range**:
-  Modify the `vertex_counts` range in `benchmark.py` to test on different graph sizes.
