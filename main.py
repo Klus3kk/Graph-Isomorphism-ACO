@@ -1,6 +1,7 @@
 import random
 import time
 import json
+import argparse
 import matplotlib.pyplot as plt
 import networkx as nx
 from itertools import permutations
@@ -17,23 +18,10 @@ class Graph:
         self.adjacency_matrix[u][v] = weight
         self.adjacency_matrix[v][u] = weight
 
-    def generate_random_graph(self, edge_probability=0.3, max_weight=10, graph_type="random"):
-        """
-        Generuje losowy graf.
-        Parametry:
-        - edge_probability: prawdopodobieństwo utworzenia krawędzi między dwoma wierzchołkami
-        - max_weight: maksymalna wartość wagi krawędzi
-        """
-        print("Generowanie grafu typu:", graph_type)
+    def generate_random_graph(self, edge_probability=0.3, max_weight=10):
         for i in range(self.num_vertices):
             for j in range(i + 1, self.num_vertices):
-                if graph_type == "random" and random.random() <= edge_probability:
-                    weight = random.randint(1, max_weight)
-                    self.add_edge(i, j, weight)
-                elif graph_type == "complete":
-                    weight = random.randint(1, max_weight)
-                    self.add_edge(i, j, weight)
-                elif graph_type == "sparse" and random.random() <= edge_probability / 2:
+                if random.random() <= edge_probability:
                     weight = random.randint(1, max_weight)
                     self.add_edge(i, j, weight)
 
@@ -82,6 +70,7 @@ class Graph:
             for v in range(graph2.num_vertices):
                 if v in used_vertices_graph2:
                     continue
+                # Ocena dopasowania
                 score = sum(1 for neighbor_u in range(self.num_vertices) 
                             if self.adjacency_matrix[u][neighbor_u] > 0 and 
                             graph2.adjacency_matrix[v][neighbor_u] > 0)
@@ -91,6 +80,7 @@ class Graph:
             if best_match is not None:
                 mapping.append((u, best_match))
                 used_vertices_graph2.add(best_match)
+            print(f"Greedy step: u={u}, best_match={best_match}, best_score={best_score}")
         return mapping
 
     def randomized_greedy_isomorphism(self, graph2, randomness_factor=0.1):
@@ -121,6 +111,7 @@ class Graph:
         return mapping
 
     def brute_force_isomorphism(self, graph2):
+        self.validate_graph_size(graph2)
         print("Wykonywanie pełnego przeglądu (brute-force)...")
         best_mapping = None
         best_score = 0
@@ -144,11 +135,12 @@ class Graph:
         score = 0
         for u, v in mapping:
             for neighbor_u in range(graph1.num_vertices):
-                if graph1.adjacency_matrix[u][neighbor_u] > 0:
+                if graph1.adjacency_matrix[u][neighbor_u] > 0:  # Jeśli jest krawędź w grafie 1
                     mapped_neighbor_v = next((m[1] for m in mapping if m[0] == neighbor_u), None)
                     if mapped_neighbor_v is not None and graph2.adjacency_matrix[v][mapped_neighbor_v] == graph1.adjacency_matrix[u][neighbor_u]:
                         score += 1
         return score
+
 
     def update_pheromones(self, mappings, decay=0.5, pheromone_increase=1):
         """
@@ -164,6 +156,7 @@ class Graph:
                 self.pheromone_matrix[v][u] += pheromone_increase
 
     def run_aco_for_isomorphism(self, graph1, graph2, num_ants=10, num_iterations=5, alpha=1, beta=1, decay=0.5, pheromone_increase=1):
+        self.validate_graph_size(graph2)
         print("Rozpoczynanie algorytmu mrówkowego (ACO)...")
         best_mapping, best_score = None, float('-inf')
         for iteration in tqdm(range(num_iterations), desc="ACO iterations progress", leave=True):
@@ -223,50 +216,59 @@ class Graph:
         plt.title("Dopasowanie między Grafem 1 a Grafem 2")
         plt.show()
 
+    def validate_graph_size(self, graph2):
+        """
+        Sprawdza, czy liczba wierzchołków w obu grafach jest taka sama.
+        Jeśli nie, zgłasza wyjątek ValueError.
+        """
+        if self.num_vertices != graph2.num_vertices:
+            raise ValueError(f"Liczba wierzchołków nie zgadza się: "
+                            f"Graph1 ma {self.num_vertices}, Graph2 ma {graph2.num_vertices}")
+
+    
     def evaluate_solution_quality(self, graph2, num_ants=5, num_iterations=3, alpha=1, beta=1, decay=0.3, pheromone_increase=2):
+        self.validate_graph_size(graph2)
         print("Rozpoczynanie oceny jakości rozwiązań...")
         results = {}
 
+        # Algorytm zachłanny
         print("Uruchamianie algorytmu zachłannego...")
-        start_time = time.time()
+        start_time = time.perf_counter()  # Użycie perf_counter
         mapping_greedy = self.greedy_isomorphism(graph2)
+        time_greedy = time.perf_counter() - start_time
         score_greedy = self.evaluate_mapping(self, graph2, mapping_greedy)
-        time_greedy = time.time() - start_time
         results['Greedy'] = {
             'Mapping': mapping_greedy,
             'Score': score_greedy,
             'Time': time_greedy
         }
-        # Zapis grafu i mappingu do JSON
         self.save_mapping_to_json(graph2, mapping_greedy, "greedy_mapping.json")
-        # Wizualizacja wyniku zachłannego
         self.visualize_mapping(self, graph2, mapping_greedy)
 
+        # Algorytm brute-force
         print("Uruchamianie algorytmu brute-force...")
-        start_time = time.time()
+        start_time = time.perf_counter()
         mapping_brute, score_brute = self.brute_force_isomorphism(graph2)
-        time_brute = time.time() - start_time
+        time_brute = time.perf_counter() - start_time
         results['BruteForce'] = {
             'Mapping': mapping_brute,
             'Score': score_brute,
             'Time': time_brute
         }
-        # Zapis grafu i mappingu do JSON
         self.save_mapping_to_json(graph2, mapping_brute, "brute_force_mapping.json")
-        # Wizualizacja wyniku brute-force
         if mapping_brute:
             self.visualize_mapping(self, graph2, mapping_brute)
 
+        # Algorytm mrówkowy (ACO)
         print("Uruchamianie algorytmu mrówkowego...")
-        start_time = time.time()
+        start_time = time.perf_counter()
         mapping_aco, score_aco = self.run_aco_for_isomorphism(self, graph2, num_ants=num_ants, num_iterations=num_iterations, alpha=alpha, beta=beta, decay=decay, pheromone_increase=pheromone_increase)
-        time_aco = time.time() - start_time
+        time_aco = time.perf_counter() - start_time
         results['ACO'] = {
             'Mapping': mapping_aco,
             'Score': score_aco,
             'Time': time_aco
         }
-        # Zapis grafu i mappingu do JSON
         self.save_mapping_to_json(graph2, mapping_aco, "aco_mapping.json")
 
         # Zapis wyników do pliku JSON
@@ -274,6 +276,7 @@ class Graph:
             json.dump(results, f, indent=4)
             print("Wyniki zapisane do pliku results.json")
         return results
+
 
     
     def save_mapping_to_json(self, graph2, mapping, filename):
@@ -296,24 +299,41 @@ class Graph:
         print(f"Mapping zapisany do pliku {filename}")
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Graph Isomorphism ACO Test")
+    parser.add_argument("--file1", type=str, help="Ścieżka do pierwszego pliku JSON grafu")
+    parser.add_argument("--file2", type=str, help="Ścieżka do drugiego pliku JSON grafu")
+    parser.add_argument("--generate", action="store_true", help="Generuj dane losowo zamiast korzystać z plików JSON")
+    parser.add_argument("--vertices", type=int, default=5, help="Liczba wierzchołków do wygenerowania grafów")
+    parser.add_argument("--edge_probability", type=float, default=0.3, help="Prawdopodobieństwo krawędzi w losowym grafie")
+    parser.add_argument("--max_weight", type=int, default=10, help="Maksymalna waga krawędzi w losowym grafie")
+    args = parser.parse_args()
 
+    if args.generate:
+        print("Generowanie losowych grafów...")
+        graph1 = Graph(args.vertices)
+        graph1.generate_random_graph(edge_probability=args.edge_probability, max_weight=args.max_weight)
+        graph1.initialize_pheromones()
 
-# Przykład użycia i porównanie algorytmów
-graph1 = Graph(10)
-graph1.generate_random_graph(edge_probability=0.5, max_weight=20)
-graph1.initialize_pheromones()
+        graph2 = Graph(args.vertices)
+        graph2.generate_random_graph(edge_probability=args.edge_probability, max_weight=args.max_weight)
+        graph2.initialize_pheromones()
 
-graph2 = Graph(10)
-graph2.generate_random_graph(edge_probability=0.5, max_weight=20)
-graph2.initialize_pheromones()
+    elif args.file1 and args.file2:
+        print("Ładowanie grafów z plików JSON...")
+        graph1 = Graph(0)
+        graph1.load_from_json(args.file1)
+        graph1.initialize_pheromones()
 
-# Uruchomienie testów oceny jakości rozwiązań
-results = graph1.evaluate_solution_quality(
-    graph2, 
-    num_ants=5, 
-    num_iterations=5, 
-    alpha=1, 
-    beta=2, 
-    decay=0.3, 
-    pheromone_increase=2
-)
+        graph2 = Graph(0)
+        graph2.load_from_json(args.file2)
+        graph2.initialize_pheromones()
+    else:
+        print("Błąd: Musisz podać albo opcję `--generate`, albo oba pliki JSON `--file1` i `--file2`.")
+        return
+
+    print("Wykonywanie testów...")
+    graph1.evaluate_solution_quality(graph2, num_ants=5, num_iterations=5)
+
+if __name__ == "__main__":
+    main()
