@@ -8,14 +8,12 @@ from tqdm import tqdm
 
 class Graph:
     def __init__(self, num_vertices):
-        # Inicjalizacja grafu z macierzą sąsiedztwa i macierzą feromonów
         self.num_vertices = num_vertices
         self.adjacency_matrix = [[0 for _ in range(num_vertices)] for _ in range(num_vertices)]
         self.pheromone_matrix = [[1 for _ in range(num_vertices)] for _ in range(num_vertices)]
         self.start_time = time.time()
 
     def add_edge(self, u, v, weight):
-        # Dodajemy krawędź z wagą (dla grafu nieskierowanego)
         self.adjacency_matrix[u][v] = weight
         self.adjacency_matrix[v][u] = weight
 
