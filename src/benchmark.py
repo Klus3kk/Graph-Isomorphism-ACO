@@ -1,10 +1,13 @@
 import time
 import matplotlib.pyplot as plt
 from main import Graph
+import os 
 
+output_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+os.makedirs(output_folder, exist_ok=True)
 
 def compare_algorithms_and_quality():
-    vertex_counts = range(5, 11)  # Liczba wierzchołków do testowania (5 do 10 włącznie)
+    vertex_counts = range(5, 10)  # Liczba wierzchołków do testowania (5 do 10 włącznie)
     greedy_times = []
     brute_force_times = []
     aco_times = []
@@ -25,7 +28,7 @@ def compare_algorithms_and_quality():
         graph2.initialize_pheromones()
 
         # Algorytm zachłanny (Greedy)
-        print("Uruchamianie algorytmu zachłannego (Greedy)...")
+        # print("Uruchamianie algorytmu zachłannego (Greedy)...")
         start_time = time.perf_counter()
         greedy_mapping = graph1.greedy_isomorphism(graph2)
         greedy_time = time.perf_counter() - start_time
@@ -34,9 +37,9 @@ def compare_algorithms_and_quality():
         greedy_qualities.append(greedy_score / (num_vertices * (num_vertices - 1)))  # Normalizowana jakość
         print(f"Greedy: czas = {greedy_time:.6f}s, jakość = {greedy_qualities[-1]:.6f}")
 
-        # Algorytm brute-force (tylko dla mniejszych grafów)
-        if num_vertices <= 8:  # Ograniczenie do <= 8 wierzchołków dla oszczędności czasu
-            print("Uruchamianie algorytmu brute-force...")
+        # Algorytm brute-force 
+        if num_vertices <= 30:  
+            # print("Uruchamianie algorytmu brute-force...")
             start_time = time.perf_counter()
             brute_force_mapping, brute_force_score = graph1.brute_force_isomorphism(graph2)
             brute_force_time = time.perf_counter() - start_time
@@ -49,7 +52,7 @@ def compare_algorithms_and_quality():
             print("BruteForce: pominięte (zbyt duży graf).")
 
         # Algorytm mrówkowy (ACO)
-        print("Uruchamianie algorytmu mrówkowego (ACO)...")
+        # print("Uruchamianie algorytmu mrówkowego (ACO)...")
         start_time = time.perf_counter()
         aco_mapping, aco_score = graph1.run_aco_for_isomorphism(
             graph1, graph2, num_ants=5, num_iterations=5
@@ -77,7 +80,8 @@ def create_time_plot(vertex_counts, greedy_times, brute_force_times, aco_times):
     plt.title("Zależność czasu wykonania algorytmów od liczby wierzchołków")
     plt.legend()
     plt.grid()
-    plt.savefig("algorithm_time_comparison_log.png")
+    filepath = os.path.join(output_folder, "algorithm_time_comparison_log.png")
+    plt.savefig(filepath)
     plt.show()
 
 
@@ -93,7 +97,8 @@ def create_quality_plot(vertex_counts, greedy_qualities, brute_force_qualities, 
     plt.title("Zależność jakości rozwiązań od liczby wierzchołków")
     plt.legend()
     plt.grid()
-    plt.savefig("algorithm_quality_comparison.png")
+    filepath = os.path.join(output_folder, "algorithm_quality_comparison.png")
+    plt.savefig(filepath)
     plt.show()
 
 

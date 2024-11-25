@@ -4,6 +4,7 @@ import json
 import argparse
 import matplotlib.pyplot as plt
 import networkx as nx
+import os
 from itertools import permutations
 from tqdm import tqdm
 
@@ -27,27 +28,38 @@ class Graph:
 
     def save_to_json(self, filename="graph.json"):
         """
-        Zapisuje graf do pliku JSON w formacie macierzy sąsiedztwa.
+        Zapisuje graf do pliku JSON w folderze 'data/'.
         """
+        project_root = os.path.dirname(os.path.dirname(__file__))  
+        output_folder = os.path.join(project_root, 'data')
+        os.makedirs(output_folder, exist_ok=True)
+        filepath = os.path.join(output_folder, filename)
+        
         data = {
             "num_vertices": self.num_vertices,
             "adjacency_matrix": self.adjacency_matrix,
             "pheromone_matrix": self.pheromone_matrix
         }
-        with open(filename, "w") as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=4)
-        print(f"Graf zapisany do pliku {filename}")
+        print(f"Graf zapisany do pliku {filepath}")
 
     def load_from_json(self, filename):
         """
-        Ładuje graf z pliku JSON.
+        Ładuje graf z pliku JSON
         """
-        with open(filename, "r") as f:
+        project_root = os.path.dirname(os.path.dirname(__file__))  
+        input_folder = os.path.join(project_root, 'data')
+        filepath = os.path.join(input_folder, filename)
+        with open(filepath, "r") as f:
             data = json.load(f)
         self.num_vertices = data["num_vertices"]
         self.adjacency_matrix = data["adjacency_matrix"]
-        self.pheromone_matrix = data.get("pheromone_matrix", [[1 for _ in range(self.num_vertices)] for _ in range(self.num_vertices)])
-
+        self.pheromone_matrix = data.get(
+            "pheromone_matrix",
+            [[1 for _ in range(self.num_vertices)] for _ in range(self.num_vertices)]
+        )
+        
     def initialize_pheromones(self, initial_pheromone=1):
         """
         Inicjalizuje wartości feromonów na każdej krawędzi.
@@ -80,7 +92,7 @@ class Graph:
             if best_match is not None:
                 mapping.append((u, best_match))
                 used_vertices_graph2.add(best_match)
-            print(f"Greedy step: u={u}, best_match={best_match}, best_score={best_score}")
+            # print(f"Greedy step: u={u}, best_match={best_match}, best_score={best_score}")
         return mapping
 
     def randomized_greedy_isomorphism(self, graph2, randomness_factor=0.1):
@@ -123,7 +135,7 @@ class Graph:
                 if score > best_score:
                     best_score = score
                     best_mapping = mapping
-                pbar.update(1)  # Aktualizuj pasek postępu
+                pbar.update(1)  
         print("Algorytm brute-force zakończony!")
         return best_mapping, best_score
 
@@ -231,9 +243,8 @@ class Graph:
         print("Rozpoczynanie oceny jakości rozwiązań...")
         results = {}
 
-        # Algorytm zachłanny
         print("Uruchamianie algorytmu zachłannego...")
-        start_time = time.perf_counter()  # Użycie perf_counter
+        start_time = time.perf_counter()  # W tym przypadku perf_counter() jest lepszy od time()
         mapping_greedy = self.greedy_isomorphism(graph2)
         time_greedy = time.perf_counter() - start_time
         score_greedy = self.evaluate_mapping(self, graph2, mapping_greedy)
@@ -245,7 +256,6 @@ class Graph:
         self.save_mapping_to_json(graph2, mapping_greedy, "greedy_mapping.json")
         self.visualize_mapping(self, graph2, mapping_greedy)
 
-        # Algorytm brute-force
         print("Uruchamianie algorytmu brute-force...")
         start_time = time.perf_counter()
         mapping_brute, score_brute = self.brute_force_isomorphism(graph2)
@@ -259,7 +269,6 @@ class Graph:
         if mapping_brute:
             self.visualize_mapping(self, graph2, mapping_brute)
 
-        # Algorytm mrówkowy (ACO)
         print("Uruchamianie algorytmu mrówkowego...")
         start_time = time.perf_counter()
         mapping_aco, score_aco = self.run_aco_for_isomorphism(self, graph2, num_ants=num_ants, num_iterations=num_iterations, alpha=alpha, beta=beta, decay=decay, pheromone_increase=pheromone_increase)
@@ -270,9 +279,14 @@ class Graph:
             'Time': time_aco
         }
         self.save_mapping_to_json(graph2, mapping_aco, "aco_mapping.json")
-
-        # Zapis wyników do pliku JSON
-        with open("results.json", "w") as f:
+        self.visualize_mapping(self, graph2, mapping_aco)
+        
+        
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        output_folder = os.path.join(project_root, 'results')
+        os.makedirs(output_folder, exist_ok=True)
+        results_filepath = os.path.join(output_folder, "results.json")
+        with open(results_filepath, "w") as f:
             json.dump(results, f, indent=4)
             print("Wyniki zapisane do pliku results.json")
         return results
@@ -283,6 +297,11 @@ class Graph:
         """
         Zapisuje grafy i mapping do pliku JSON.
         """
+        project_root = os.path.dirname(os.path.dirname(__file__)) 
+        output_folder = os.path.join(project_root, 'results')
+        os.makedirs(output_folder, exist_ok=True)
+        filepath = os.path.join(output_folder, filename)
+        
         data = {
             "Graph1": {
                 "num_vertices": self.num_vertices,
@@ -294,9 +313,8 @@ class Graph:
             },
             "Mapping": mapping
         }
-        with open(filename, "w") as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=4)
-        print(f"Mapping zapisany do pliku {filename}")
 
 
 def main():

@@ -11,7 +11,7 @@ This project addresses the **Graph Isomorphism Problem**, which involves determi
 - Generate random graphs for testing with customizable parameters (number of vertices, edge probabilities, and weights).
 - Load graphs from JSON files for reproducibility and external data.
 - Benchmark and compare the performance of the algorithms in terms of runtime and solution quality.
-- Visualize graph mappings and connections using NetworkX.
+- Visualize graph mappings and connections using **NetworkX**.
 
 ## Usage
 
@@ -28,10 +28,8 @@ python benchmark.py
 This will:
 
 - Generate random graphs dynamically.
-
 - Compare the execution time and quality of all three algorithms.
-
-- Save plots for runtime (`algorithm_time_comparison_log.png`) and solution quality (`algorithm_quality_comparison.png`).
+- Save plots for runtime (`algorithm_time_comparison_log.png`) and solution quality (`algorithm_quality_comparison.png`) in the `results/` folder.
 
 ### Running the Main Program
 
@@ -45,7 +43,7 @@ To generate random graphs and test the algorithms:
 python main.py --generate --vertices <num_vertices> --edge_probability <prob> --max_weight <weight>
 ```
 
-**Example**
+##### Example of usage with random graphs
 
 ```bash
 python main.py --generate --vertices 5 --edge_probability 0.5 --max_weight 10
@@ -59,24 +57,24 @@ To load graphs from JSON files for testing:
 python main.py --file1 <path_to_graph1.json> --file2 <path_to_graph2.json>
 ```
 
-**Example**:
+##### Example of usage with files
 
 ```bash
-python main.py --file1 graph1.json --file2 graph2.json
+python main.py --file1 data/graph1.json --file2 data/graph2.json
 ```
 
 ## Output Files
 
 - **Results**:
-  - `results.json`: Contains mappings, scores, and execution times for all three algorithms.
+  - `results/results.json`: Contains mappings, scores, and execution times for all three algorithms.
   - Individual mapping files:
-    - `greedy_mapping.json`
-    - `brute_force_mapping.json`
-    - `aco_mapping.json`
+    - `results/greedy_mapping.json`
+    - `results/brute_force_mapping.json`
+    - `results/aco_mapping.json`
 
 - **Plots**:
-  - `algorithm_time_comparison_log.png`: Runtime comparison of algorithms.
-  - `algorithm_quality_comparison.png`: Quality comparison of solutions.
+  - `results/algorithm_time_comparison_log.png`: Runtime comparison of algorithms.
+  - `results/algorithm_quality_comparison.png`: Quality comparison of solutions.
 
 ## How It Works
 
@@ -113,4 +111,12 @@ Uruchamianie algorytmu brute-force...
 BruteForce: czas = 0.012048s, jakość = 1.000000
 Uruchamianie algorytmu mrówkowego (ACO)...
 ACO: czas = 0.004231s, jakość = 0.950000
+```
+
+## Install Dependencies
+
+Before running the project, ensure you have the necessary Python dependencies installed. You can install them using:
+
+```bash
+pip install -r requirements.txt
 ```

@@ -1,10 +1,12 @@
 import random
 import json
-
+import os 
 def generate_two_test_instances():
     """
     Generuje dwa różne grafy w formacie JSON na podstawie danych wejściowych od użytkownika.
     """
+    output_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+    os.makedirs(output_folder, exist_ok=True)
     try:
         n_vertices = int(input("Podaj liczbę wierzchołków w grafach: "))
         edge_probability = float(input("Podaj prawdopodobieństwo krawędzi (0-1): "))
@@ -32,10 +34,12 @@ def generate_two_test_instances():
     graph2 = generate_graph()
 
     # Pobieranie nazw plików od użytkownika
-    filename1 = input("Podaj nazwę pliku dla pierwszego grafu (np. graph1): ") + ".json"
-    filename2 = input("Podaj nazwę pliku dla drugiego grafu (np. graph2): ") + ".json"
+    filename1 = os.path.join(output_folder, input("Podaj nazwę pliku dla pierwszego grafu (np. graph1): ") + ".json")
+    filename2 = os.path.join(output_folder, input("Podaj nazwę pliku dla drugiego grafu (np. graph2): ") + ".json")
 
-    # Zapisywanie grafów do plików JSON
+    os.makedirs("data", exist_ok=True)  # Utwórz folder, jeśli nie istnieje
+
+    # Zapisywanie grafów
     with open(filename1, "w") as f:
         json.dump(graph1, f, indent=4)
     print(f"Wygenerowano pierwszy graf zapisany jako {filename1}")
