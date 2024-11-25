@@ -80,7 +80,7 @@ def create_time_plot(vertex_counts, greedy_times, brute_force_times, aco_times):
     plt.title("Zależność czasu wykonania algorytmów od liczby wierzchołków")
     plt.legend()
     plt.grid()
-    filepath = os.path.join(output_folder, "algorithm_time_comparison_log.png")
+    filepath = os.path.join(output_folder, "algorithm_time_comparison.png")
     plt.savefig(filepath)
     plt.show()
 
