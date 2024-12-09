@@ -5,9 +5,12 @@ import os
 
 output_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 os.makedirs(output_folder, exist_ok=True)
+os.environ["OMP_NUM_THREADS"] = "1"  
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 def compare_algorithms_and_quality():
-    vertex_counts = range(5, 10)  # Liczba wierzchołków do testowania (5 do 10 włącznie)
+    vertex_counts = range(5, 11)  # Liczba wierzchołków do testowania (5 do 10 włącznie)
     greedy_times = []
     brute_force_times = []
     aco_times = []
@@ -20,11 +23,11 @@ def compare_algorithms_and_quality():
 
         # Generowanie grafów w locie
         graph1 = Graph(num_vertices)
-        graph1.generate_random_graph(edge_probability=0.5, max_weight=20)
+        graph1.generate_random_graph(edge_probability=0.8, max_weight=20)
         graph1.initialize_pheromones()
 
         graph2 = Graph(num_vertices)
-        graph2.generate_random_graph(edge_probability=0.5, max_weight=20)
+        graph2.generate_random_graph(edge_probability=0.8, max_weight=20)
         graph2.initialize_pheromones()
 
         # Algorytm zachłanny (Greedy)
@@ -55,7 +58,7 @@ def compare_algorithms_and_quality():
         # print("Uruchamianie algorytmu mrówkowego (ACO)...")
         start_time = time.perf_counter()
         aco_mapping, aco_score = graph1.run_aco_for_isomorphism(
-            graph1, graph2, num_ants=5, num_iterations=5
+            graph1, graph2, num_ants=30, num_iterations=100, alpha=1, beta=2, decay=0.1, pheromone_increase=5
         )
         aco_time = time.perf_counter() - start_time
         aco_times.append(aco_time)
@@ -69,7 +72,8 @@ def compare_algorithms_and_quality():
 
 def create_time_plot(vertex_counts, greedy_times, brute_force_times, aco_times):
     plt.figure(figsize=(10, 6))
-    brute_force_cleaned = [t if t is not None else max(filter(None, brute_force_times)) * 10 for t in brute_force_times]
+    brute_force_cleaned = [t if t is not None else float('inf') for t in brute_force_times]
+
 
     plt.plot(vertex_counts, greedy_times, label="Greedy", marker="o", linestyle="-")
     plt.plot(vertex_counts, brute_force_cleaned, label="Brute Force", marker="o", linestyle="--")
