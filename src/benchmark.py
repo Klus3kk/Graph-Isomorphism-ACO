@@ -5,12 +5,13 @@ import os
 
 output_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 os.makedirs(output_folder, exist_ok=True)
+
 os.environ["OMP_NUM_THREADS"] = "1"  
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 def compare_algorithms_and_quality():
-    vertex_counts = range(5, 11)  # Liczba wierzchołków do testowania (5 do 10 włącznie)
+    vertex_counts = range(5, 11)  # Liczba wierzchołków do testowania (maksymalnie 10)
     greedy_times = []
     brute_force_times = []
     aco_times = []
@@ -78,7 +79,7 @@ def create_time_plot(vertex_counts, greedy_times, brute_force_times, aco_times):
     plt.plot(vertex_counts, greedy_times, label="Greedy", marker="o", linestyle="-")
     plt.plot(vertex_counts, brute_force_cleaned, label="Brute Force", marker="o", linestyle="--")
     plt.plot(vertex_counts, aco_times, label="ACO", marker="o", linestyle="-")
-    plt.yscale("log")  # Logarytmiczna skala
+    plt.yscale("log")  
     plt.xlabel("Liczba wierzchołków")
     plt.ylabel("Czas wykonania (s) [log scale]")
     plt.title("Zależność czasu wykonania algorytmów od liczby wierzchołków")

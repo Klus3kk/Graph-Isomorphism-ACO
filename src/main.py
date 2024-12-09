@@ -7,9 +7,11 @@ import networkx as nx
 import os
 from itertools import permutations
 from tqdm import tqdm
-os.environ["OMP_NUM_THREADS"] = "1"  
+
+os.environ["OMP_NUM_THREADS"] = "1"  # Używam jednego wątku do rozwiązywania problemu
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
 class Graph:
     def __init__(self, num_vertices):
         self.num_vertices = num_vertices
@@ -96,33 +98,6 @@ class Graph:
                 used_vertices_graph2.add(best_match)
             # print(f"Greedy step: u={u}, best_match={best_match}, best_score={best_score}")
         return mapping
-
-    # def randomized_greedy_isomorphism(self, graph2, randomness_factor=0.1):
-    #     mapping = []
-    #     used_vertices_graph2 = set()
-
-    #     for u in range(self.num_vertices):
-    #         candidates = []
-    #         for v in range(graph2.num_vertices):
-    #             if v not in used_vertices_graph2:
-    #                 score = sum(1 for neighbor_u in range(self.num_vertices)
-    #                             if self.adjacency_matrix[u][neighbor_u] > 0 and
-    #                             graph2.adjacency_matrix[v][neighbor_u] > 0)
-    #                 candidates.append((v, score))
-
-    #         candidates.sort(key=lambda x: -x[1])
-    #         if not candidates:
-    #             continue
-
-    #         if random.random() < randomness_factor and len(candidates) > 1:
-    #             chosen = random.choice(candidates[1:])
-    #         else:
-    #             chosen = candidates[0]
-
-    #         mapping.append((u, chosen[0]))
-    #         used_vertices_graph2.add(chosen[0])
-
-    #     return mapping
 
     def brute_force_isomorphism(self, graph2):
         self.validate_graph_size(graph2)
