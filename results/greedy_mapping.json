@@ -100,5 +100,9 @@
             4,
             1
         ]
-    ]
+    ],
+    "Analysis": {
+        "EdgeMatches": 2,
+        "TotalMappingSize": 5
+    }
 }

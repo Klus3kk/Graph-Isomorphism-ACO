@@ -81,24 +81,16 @@
     },
     "Mapping": [
         [
-            0,
-            4
-        ],
-        [
-            1,
-            2
-        ],
-        [
             2,
             0
         ],
         [
             3,
-            1
-        ],
-        [
-            4,
             3
         ]
-    ]
+    ],
+    "Analysis": {
+        "EdgeMatches": 0,
+        "TotalMappingSize": 2
+    }
 }

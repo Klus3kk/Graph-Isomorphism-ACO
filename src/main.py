@@ -100,21 +100,44 @@ class Graph:
         return mapping
 
     def brute_force_isomorphism(self, graph2):
+        """
+        Zoptymalizowana wersja algorytmu brute-force z redukcją permutacji.
+        """
         self.validate_graph_size(graph2)
-        print("Wykonywanie pełnego przeglądu (brute-force)...")
+        print("Wykonywanie zoptymalizowanego brute-force...")
+
+        # Tworzymy grupy wierzchołków o tym samym stopniu
+        degrees1 = {i: sum(1 for x in self.adjacency_matrix[i] if x > 0) for i in range(self.num_vertices)}
+        degrees2 = {i: sum(1 for x in graph2.adjacency_matrix[i] if x > 0) for i in range(graph2.num_vertices)}
+
+        groups1 = {}
+        groups2 = {}
+
+        for v, degree in degrees1.items():
+            groups1.setdefault(degree, []).append(v)
+        for v, degree in degrees2.items():
+            groups2.setdefault(degree, []).append(v)
+
+        # Redukcja permutacji: Dopasowujemy tylko wierzchołki z tych samych grup stopni
+        possible_mappings = []
+        for degree in groups1:
+            if degree in groups2:
+                for perm in permutations(groups2[degree], len(groups1[degree])):
+                    mapping = list(zip(groups1[degree], perm))
+                    possible_mappings.append(mapping)
+
         best_mapping = None
-        best_score = 0
-        total_permutations = len(list(permutations(range(graph2.num_vertices))))  # Liczba permutacji
-        with tqdm(total=total_permutations, desc="Brute-force progress", leave=True) as pbar:
-            for perm in permutations(range(graph2.num_vertices)):
-                mapping = [(u, v) for u, v in enumerate(perm)]
-                score = self.evaluate_mapping(self, graph2, mapping)
-                if score > best_score:
-                    best_score = score
-                    best_mapping = mapping
-                pbar.update(1)  
-        print("Algorytm brute-force zakończony!")
+        best_score = float('-inf')
+
+        for mapping in tqdm(possible_mappings, desc="Brute-force progress", leave=True):
+            score = self.evaluate_mapping(self, graph2, mapping)  # Poprawne wywołanie
+            if score > best_score:
+                best_score = score
+                best_mapping = mapping
+
+        print("Zoptymalizowany brute-force zakończony!")
         return best_mapping, best_score
+
 
 
     def evaluate_mapping(self, graph1, graph2, mapping):
@@ -272,13 +295,23 @@ class Graph:
     
     def save_mapping_to_json(self, graph2, mapping, filename):
         """
-        Zapisuje grafy i mapping do pliku JSON.
+        Zapisuje grafy i mapping do pliku JSON z dodatkową analizą.
         """
-        project_root = os.path.dirname(os.path.dirname(__file__)) 
-        output_folder = os.path.join(project_root, 'results')
-        os.makedirs(output_folder, exist_ok=True)
+        # Pobieramy katalog główny projektu
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  
+        output_folder = os.path.join(project_root, 'results')  # Folder results w głównym katalogu projektu
+        os.makedirs(output_folder, exist_ok=True)  # Tworzymy folder, jeśli nie istnieje
         filepath = os.path.join(output_folder, filename)
         
+        # Obliczenie dodatkowej analizy mappingu
+        edge_matches = sum(
+            1
+            for u, v in mapping
+            for neighbor_u in range(self.num_vertices)
+            if self.adjacency_matrix[u][neighbor_u] > 0
+            and graph2.adjacency_matrix[v][next((m[1] for m in mapping if m[0] == neighbor_u), -1)] == self.adjacency_matrix[u][neighbor_u]
+        )
+
         data = {
             "Graph1": {
                 "num_vertices": self.num_vertices,
@@ -288,10 +321,19 @@ class Graph:
                 "num_vertices": graph2.num_vertices,
                 "adjacency_matrix": graph2.adjacency_matrix
             },
-            "Mapping": mapping
+            "Mapping": mapping,
+            "Analysis": {
+                "EdgeMatches": edge_matches,
+                "TotalMappingSize": len(mapping)
+            }
         }
+
         with open(filepath, "w") as f:
             json.dump(data, f, indent=4)
+        print(f"Mapping zapisany do pliku {filepath}")
+
+
+
 
 
 def main():
