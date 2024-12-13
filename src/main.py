@@ -74,9 +74,6 @@ class Graph:
                     self.pheromone_matrix[i][j] = initial_pheromone
 
     def greedy_isomorphism(self, graph2):
-        """
-        Implementacja zachłannego algorytmu do znajdowania izomorfizmu między grafami.
-        """
         print("Wykonywanie algorytmu zachłannego...")
         mapping = []
         used_vertices_graph2 = set()
@@ -86,7 +83,6 @@ class Graph:
             for v in range(graph2.num_vertices):
                 if v in used_vertices_graph2:
                     continue
-                # Ocena dopasowania
                 score = sum(1 for neighbor_u in range(self.num_vertices) 
                             if self.adjacency_matrix[u][neighbor_u] > 0 and 
                             graph2.adjacency_matrix[v][neighbor_u] > 0)
@@ -96,13 +92,9 @@ class Graph:
             if best_match is not None:
                 mapping.append((u, best_match))
                 used_vertices_graph2.add(best_match)
-            # print(f"Greedy step: u={u}, best_match={best_match}, best_score={best_score}")
         return mapping
 
     def brute_force_isomorphism(self, graph2):
-        """
-        Zoptymalizowana wersja algorytmu brute-force z redukcją permutacji.
-        """
         self.validate_graph_size(graph2)
         print("Wykonywanie zoptymalizowanego brute-force...")
 
@@ -130,7 +122,7 @@ class Graph:
         best_score = float('-inf')
 
         for mapping in tqdm(possible_mappings, desc="Brute-force progress", leave=True):
-            score = self.evaluate_mapping(self, graph2, mapping)  # Poprawne wywołanie
+            score = self.evaluate_mapping(self, graph2, mapping)  
             if score > best_score:
                 best_score = score
                 best_mapping = mapping
