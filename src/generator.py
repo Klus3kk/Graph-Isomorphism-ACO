@@ -21,7 +21,7 @@ def generate_two_test_instances():
     # Funkcja pomocnicza do generowania pojedynczego grafu
     def generate_graph():
         adjacency_matrix = [[0 for _ in range(n_vertices)] for _ in range(n_vertices)]
-        pheromone_matrix = [[1 for _ in range(n_vertices)] for _ in range(n_vertices)]  # Macierz feromonów
+        pheromone_matrix = [[1 for _ in range(n_vertices)] for _ in range(n_vertices)]  
         for u in range(n_vertices):
             for v in range(u + 1, n_vertices):
                 if random.random() <= edge_probability:
@@ -31,7 +31,7 @@ def generate_two_test_instances():
         return {
             "num_vertices": n_vertices,
             "adjacency_matrix": adjacency_matrix,
-            "pheromone_matrix": pheromone_matrix  # Nowa cecha
+            "pheromone_matrix": pheromone_matrix  
         }
 
     # Generowanie dwóch grafów

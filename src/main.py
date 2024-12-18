@@ -291,8 +291,8 @@ class Graph:
         """
         # Pobieramy katalog główny projektu
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  
-        output_folder = os.path.join(project_root, 'results')  # Folder results w głównym katalogu projektu
-        os.makedirs(output_folder, exist_ok=True)  # Tworzymy folder, jeśli nie istnieje
+        output_folder = os.path.join(project_root, 'results')  
+        os.makedirs(output_folder, exist_ok=True)  
         filepath = os.path.join(output_folder, filename)
         
         # Obliczenie dodatkowej analizy mappingu
